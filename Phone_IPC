@@ -1,0 +1,41 @@
+import Map "mo:base/HashMap";
+import Text "mo:base/Text";
+
+actor Phonebook {
+
+  type Name = Text;
+  type Phone = Text;
+
+  type Entry = {
+    desc: Text;
+    phone: Phone;
+  };
+
+  type Message = {
+    receiver: Text;
+    message: Text;
+  };
+
+  let phoneBook = Map.HashMap<Name, Entry>(0, Text.equal, Text.hash);
+  let messageHistory = Map.HashMap<Phone, [Message]>(0, Text.equal, Text.hash); // Changed to store arrays of messages.
+
+  public func insert(name: Name, entry: Entry): async () {
+    phoneBook.put(name, entry);
+  };
+
+  public query func getPhone(name: Name): async ?Entry {
+    return phoneBook.get(name);
+  };
+
+  public func sendMessage(senderPhone: Phone, message: Message): async () {
+    let messages = messageHistory.get(senderPhone);
+    messageHistory.put(senderPhone, switch messages {
+      case (null) { [message] }; // If no messages exist for this phone, create a new array.
+      case (?msgs) { msgs # [message] }; // Append to existing messages.
+    });
+  };
+
+  public query func sentMessages(senderPhone: Phone): async ?[Message] {
+    return messageHistory.get(senderPhone);
+  };
+};
